@@ -1,0 +1,5 @@
+﻿/appsettings.json
+.idea
+bin
+.vs
+Properties/launchSettings.json
