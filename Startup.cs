@@ -1,9 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
 using API.Helpers;
 using API.Services;
+using API.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using SkyCrypto;
 
 namespace API
 {
@@ -26,6 +34,8 @@ namespace API
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
+            
+            Tools.SetupSystem();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

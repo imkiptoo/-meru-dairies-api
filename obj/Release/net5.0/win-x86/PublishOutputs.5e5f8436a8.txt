@@ -1,0 +1,5 @@
+/home/imkiptoo/Documents/Programming/C#/Workspace/Meru Dairies Service/Web API/bin/Release/net5.0/publish/appsettings.Development.json
+/home/imkiptoo/Documents/Programming/C#/Workspace/Meru Dairies Service/Web API/bin/Release/net5.0/publish/appsettings.json
+/home/imkiptoo/Documents/Programming/C#/Workspace/Meru Dairies Service/Web API/bin/Release/net5.0/publish/API.pdb
+/home/imkiptoo/Documents/Programming/C#/Workspace/Meru Dairies Service/Web API/bin/Release/net5.0/publish/sni.dll
+/home/imkiptoo/Documents/Programming/C#/Workspace/Meru Dairies Service/Web API/bin/Release/net5.0/publish/API.exe

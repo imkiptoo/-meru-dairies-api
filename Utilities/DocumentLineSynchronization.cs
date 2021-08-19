@@ -11,18 +11,22 @@ namespace API.Utilities
         private static SqlConnection _connection;
         public DocumentLineSynchronization()
         {
-            Tools.SetupSystem();
+            if (Tools.coreConnection == null || Tools.syncConnection == null)
+            {
+                Tools.SetupSystem();
+            }
             _connection = Tools.coreConnection;
         }
 
-        private static bool CheckIfDocumentLineExists(string strDocumentLineHeaderNo, string strDocumentLineAccountNo, String strTableName)
+        private static bool CheckIfDocumentLineExists(string strDocumentLineHeaderNo, string strDocumentLineCompanyname, string strDocumentLineAccountNo, string strTableName)
         {
             bool blRVal = false;
-            var strSqlStatement = $@"SELECT * FROM "+strTableName+" WHERE [Header No_] = @DocumentLineHeaderNo AND [Account No_] = @DocumentLineAccountNo;";
+            var strSqlStatement = $@"SELECT * FROM "+strTableName+" WHERE [Header No_] = @DocumentLineHeaderNo AND [Account No_] = @DocumentLineAccountNo AND [Company Name] = @DocumentLineCompanyName;";
 
             var cmdCommand = new SqlCommand(strSqlStatement, _connection);
             cmdCommand.Parameters.AddWithValue("@DocumentLineHeaderNo", strDocumentLineHeaderNo);
             cmdCommand.Parameters.AddWithValue("@DocumentLineAccountNo", strDocumentLineAccountNo);
+            cmdCommand.Parameters.AddWithValue("@DocumentLineCompanyName", strDocumentLineCompanyname);
             if ((_connection.State & ConnectionState.Open) == 0)
             {
                 _connection.Open();
@@ -48,7 +52,7 @@ namespace API.Utilities
             return blRVal;
         }
 
-        private static bool UpdateDocumentLine(string strDocumentLineHeaderNo, string strDocumentLineAccountNo, string strTableName, JObject joDocumentLine)
+        private static bool UpdateDocumentLine(string strDocumentLineHeaderNo, string strDocumentLineCompanyname, string strDocumentLineAccountNo, string strTableName, JObject joDocumentLine)
         {
             var blRVal = false;
 
@@ -74,7 +78,7 @@ namespace API.Utilities
                 }
             }
 
-            var strSqlStatement = $@"UPDATE " + strTableName + " SET "+strSetStatement+" WHERE [Account No_] = @AccountNo AND [Header No_] = @DocumentLineHeaderNo;";
+            var strSqlStatement = $@"UPDATE " + strTableName + " SET "+strSetStatement+" WHERE [Account No_] = @AccountNo AND [Header No_] = @DocumentLineHeaderNo AND [Company Name] = @DocumentLineCompanyName;";
 
             var cmdCommand = new SqlCommand(strSqlStatement, _connection);
 
@@ -90,6 +94,7 @@ namespace API.Utilities
             
             cmdCommand.Parameters.AddWithValue("@AccountNo", strDocumentLineAccountNo);
             cmdCommand.Parameters.AddWithValue("@DocumentLineHeaderNo", strDocumentLineHeaderNo);
+            cmdCommand.Parameters.AddWithValue("@DocumentLineCompanyName", strDocumentLineCompanyname);
             
             if ((_connection.State & ConnectionState.Open) == 0)
             {
@@ -166,9 +171,11 @@ namespace API.Utilities
         {
             var strDocumentLineHeaderNo = joDocumentLine["Header No_"].ToString();
             var strDocumentLineAccountNo = joDocumentLine["Account No_"].ToString();
-            var blDocumentLineExists = CheckIfDocumentLineExists(strDocumentLineHeaderNo, strDocumentLineAccountNo, strTableName);
+            var strDocumentLineCompanyname = joDocumentLine["Company Name"].ToString();
             
-            var blRVal = blDocumentLineExists ? UpdateDocumentLine(strDocumentLineHeaderNo, strDocumentLineAccountNo, strTableName, joDocumentLine) : InsertDocumentLine(strTableName, joDocumentLine);
+            var blDocumentLineExists = CheckIfDocumentLineExists(strDocumentLineHeaderNo, strDocumentLineCompanyname, strDocumentLineAccountNo, strTableName);
+            
+            var blRVal = blDocumentLineExists ? UpdateDocumentLine(strDocumentLineHeaderNo, strDocumentLineCompanyname, strDocumentLineAccountNo, strTableName, joDocumentLine) : InsertDocumentLine(strTableName, joDocumentLine);
 
             return blRVal;
         }

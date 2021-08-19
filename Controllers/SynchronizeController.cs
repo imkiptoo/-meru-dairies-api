@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using API.Helpers;
 using API.Utilities;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SkyCrypto;
 
@@ -14,13 +15,23 @@ namespace API.Controllers
     [Authorize]
     public class SynchronizeController : ControllerBase
     {
+        private readonly ILogger<SynchronizeController> _logger;
+
+        public SynchronizeController(ILogger<SynchronizeController> logger)
+        {
+            _logger = logger;
+            Tools._logger = logger;
+        }
+        
         [HttpPost]
         public IActionResult Post(SynchronizeRequestPayload synchronizeRequestPayload)
         {
             bool blRVal = false;
             try
             {
-                Console.Write(synchronizeRequestPayload.Payload);
+                Print.PrettyLog(theTopOnly: true);
+                Print.PrettyLog("Received Synchronization Request");
+                Print.PrettyLog(theBottomOnly: true);
 
                 var strRequestPayload = synchronizeRequestPayload.Payload;
 
@@ -37,7 +48,45 @@ namespace API.Controllers
                 strShortTableName = Crypto.decrypt(Tools.ENCRYPTION_KEY.Reverse().ToString(), strShortTableName);
 
                 var joData = JObject.Parse(strData ?? string.Empty);
+                
+                if (Tools.service!.MainCompanySyncEnabled)
+                {
+                    strLongTableName = $"[{Tools.service!.MainCompanyName}${strShortTableName}]";
+                    blRVal = SynchronizeData(strLongTableName, strShortTableName, joData);
+                }
+                else
+                {
+                    blRVal = SynchronizeData(strLongTableName, strShortTableName, joData);
+                }
 
+                if (blRVal)
+                {
+                    return Ok(new
+                    {
+                        status = 200,
+                        message = "OK",
+                    });
+                }
+                else
+                {
+                    return Problem(title: "Error Occured While Processing the Request", statusCode: 500);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.StackTrace);
+                return Problem(title: "Error Occured While Processing the Request", statusCode: 500);
+            }
+        }
+
+        public bool SynchronizeData(string strLongTableName, string strShortTableName, JObject joData)
+        {
+            bool blRVal = false;
+            try
+            {
+                Print.PrettyLog($"Table to synchronize: {strLongTableName}");
+                Print.PrettyLog(theBottomOnly: true);
+                
                 switch (strShortTableName)
                 {
                     case "Payment Header":
@@ -59,24 +108,14 @@ namespace API.Controllers
                         break;
                     }
                 }
-
-                if (blRVal)
-                {
-                    return Ok(new
-                    {
-                        status = 200,
-                        message = "OK",
-                    });
-                }
-                else
-                {
-                    return Problem(title: "Error Occured While Processing the Request", statusCode: 500);
-                }
+                
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                return Problem(title: "Error Occured While Processing the Request", statusCode: 500);
+                Console.WriteLine(e.StackTrace);
             }
+
+            return blRVal;
         }
     }
 

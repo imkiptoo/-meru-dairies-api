@@ -32,13 +32,9 @@ namespace API.Utilities
                         var joJsonResult = jaJsonResult.First;
                         joJsonResult = JObject.Parse(joJsonResult?.ToString() ?? string.Empty);
 
-                        svRVal.Id = joJsonResult["service_id"]?.ToString();
                         svRVal.Name = joJsonResult["service_name"]?.ToString();
-                        svRVal.SynchronizationFrequency = int.Parse(joJsonResult["synchronization_frequency"]?.ToString()!);
-                        svRVal.HeartBeatFrequency = int.Parse(joJsonResult["heartbeat_frequency"]?.ToString()!);
-                        svRVal.MainServerHost = joJsonResult["main_server_host"]?.ToString();
-                        svRVal.MainServerPort = int.Parse(joJsonResult["main_server_port"]?.ToString()!);
-                        svRVal.ConnectionTimeout = int.Parse(joJsonResult["main_server_connection_timeout"]?.ToString()!);
+                        svRVal.MainCompanyName = joJsonResult["main_company_name"]?.ToString();
+                        svRVal.MainCompanySyncEnabled = joJsonResult["main_company_sync_enabled"]?.ToString() == "ENABLED";
                     }
                 }
             }
@@ -53,6 +49,29 @@ namespace API.Utilities
             }
 
             return svRVal;
+        }
+        
+        public static void CreateTableIndexes(SqlConnection connection, string strDatabaseName, string strTableName, string strCompanyName)
+        {
+            try
+            {
+                var strSqlStatement = $@"
+                    IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = '[{strCompanyName}${strTableName}SyncStatus]' AND object_id = OBJECT_ID('[{strDatabaseName}].[dbo].[{strCompanyName}${strTableName}]'))
+                    BEGIN CREATE INDEX [{strCompanyName}${strTableName}SyncStatus] ON [{strDatabaseName}].[dbo].[{strCompanyName}${strTableName}] ([Synchronization Status]); END;";
+            
+                var cmdCommand = new SqlCommand(strSqlStatement, connection);
+                if ((connection.State & ConnectionState.Open) == 0)
+                {
+                    connection.Open();
+                }
+                
+                cmdCommand.ExecuteNonQuery();
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.StackTrace);
+                //Worker._logger.LogError("Error {Error}:", e.StackTrace);
+            }
         }
     }
 }

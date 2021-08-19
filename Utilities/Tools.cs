@@ -7,8 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using API.Controllers;
 using API.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using SkyCrypto;
 
@@ -18,7 +20,8 @@ namespace API.Utilities
     {
         public static SqlConnection coreConnection;
         public static SqlConnection syncConnection;
-        public static Service service;
+        public static Service service = new Service();
+        public static ILogger<SynchronizeController> _logger;
 
         public static readonly string ENCRYPTION_KEY = "BfKzPbBC4Jg57ZqP55eUBL6An0i0PYo2UIEb0IVjPimMv63JIa3OGvr0wJBZtMtd";
         public JObject ErrorJObject()
@@ -152,6 +155,7 @@ namespace API.Utilities
             }
             catch (Exception e)
             {
+                Console.Write(e.StackTrace);
                 return thePhoneNumber;
             }
         }
@@ -235,6 +239,18 @@ namespace API.Utilities
             Print.PrettyLog("User: " + strCoreDatabaseUser);
             Print.PrettyLog("Password: ************");
             Print.PrettyLog(theBottomOnly: true);
+            
+            if ((coreConnection.State & ConnectionState.Open) == 0)
+            {
+                service = Servicing.GetServiceData(syncConnection);
+                List<Table> lsTablesForSynchronization = TableSetup.GetTables(syncConnection);
+
+                foreach (var tblTable in lsTablesForSynchronization)
+                {
+                    TableManagement.CreateDocumentLineTrigger(coreConnection, strCoreDatabaseDatabase, tblTable.Name, tblTable.Company);
+                    TableManagement.CreateTableIndexes(coreConnection, strCoreDatabaseDatabase, tblTable.Name, tblTable.Company);
+                }
+            }
         }
 
         static void AddOrUpdateAppSetting<T>(string key, T value) 

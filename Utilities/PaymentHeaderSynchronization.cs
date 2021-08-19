@@ -11,17 +11,22 @@ namespace API.Utilities
         private static SqlConnection _connection;
         public PaymentHeaderSynchronization()
         {
-            Tools.SetupSystem();
+            if (Tools.coreConnection == null || Tools.syncConnection == null)
+            {
+                Tools.SetupSystem();
+            }
             _connection = Tools.coreConnection;
         }
 
-        private static bool CheckIfPaymentHeaderExists(string strPaymentHeaderNo, String strTableName)
+        private static bool CheckIfPaymentHeaderExists(string strPaymentHeaderNo, string strPaymentHeaderCompanyName, string strTableName)
         {
             bool blRVal = false;
-            var strSqlStatement = $@"SELECT * FROM "+strTableName+" WHERE [No_] = @PaymentHeaderNo;";
+            var strSqlStatement = $@"SELECT * FROM "+strTableName+" WHERE [No_] = @PaymentHeaderNo  AND [Company Name] = @PaymentHeaderCompanyName;";
 
             var cmdCommand = new SqlCommand(strSqlStatement, _connection);
             cmdCommand.Parameters.AddWithValue("@PaymentHeaderNo", strPaymentHeaderNo);
+            cmdCommand.Parameters.AddWithValue("@PaymentHeaderCompanyName", strPaymentHeaderCompanyName);
+
             if ((_connection.State & ConnectionState.Open) == 0)
             {
                 _connection.Open();
@@ -47,7 +52,7 @@ namespace API.Utilities
             return blRVal;
         }
 
-        private static bool UpdatePaymentHeader(string strPaymentHeaderNo, string strTableName, JObject joPaymentHeader)
+        private static bool UpdatePaymentHeader(string strPaymentHeaderNo, string strPaymentHeaderCompanyName, string strTableName, JObject joPaymentHeader)
         {
             var blRVal = false;
 
@@ -73,7 +78,7 @@ namespace API.Utilities
                 }
             }
 
-            var strSqlStatement = $@"UPDATE " + strTableName + " SET "+strSetStatement+" WHERE [No_] = @PaymentHeaderNo;";
+            var strSqlStatement = $@"UPDATE " + strTableName + " SET "+strSetStatement+" WHERE [No_] = @PaymentHeaderNo AND [Company Name] = @PaymentHeaderCompanyName;";
 
             var cmdCommand = new SqlCommand(strSqlStatement, _connection);
 
@@ -88,6 +93,7 @@ namespace API.Utilities
             }
             
             cmdCommand.Parameters.AddWithValue("@PaymentHeaderNo", strPaymentHeaderNo);
+            cmdCommand.Parameters.AddWithValue("@PaymentHeaderCompanyName", strPaymentHeaderCompanyName);
             
             if ((_connection.State & ConnectionState.Open) == 0)
             {
@@ -163,9 +169,11 @@ namespace API.Utilities
         public bool ProcessPaymentHeader(string strTableName, JObject joPaymentHeader)
         {
             var strHeaderNo = joPaymentHeader["No_"].ToString();
-            var blPaymentHeaderExists = CheckIfPaymentHeaderExists(strHeaderNo, strTableName);
+            var strPaymentHeaderCompanyName = joPaymentHeader["Company Name"].ToString();
+            
+            var blPaymentHeaderExists = CheckIfPaymentHeaderExists(strHeaderNo, strPaymentHeaderCompanyName, strTableName);
 
-            var blRVal = blPaymentHeaderExists ? UpdatePaymentHeader(strHeaderNo, strTableName, joPaymentHeader) : InsertPaymentHeader(strTableName, joPaymentHeader);
+            var blRVal = blPaymentHeaderExists ? UpdatePaymentHeader(strHeaderNo, strPaymentHeaderCompanyName, strTableName, joPaymentHeader) : InsertPaymentHeader(strTableName, joPaymentHeader);
 
             return blRVal;
         }
