@@ -6,7 +6,6 @@ using API.Helpers;
 using API.Utilities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SkyCrypto;
 
 namespace API.Controllers
 {
@@ -35,7 +34,7 @@ namespace API.Controllers
 
                 var strRequestPayload = synchronizeRequestPayload.Payload;
 
-                strRequestPayload = Crypto.decrypt(Tools.ENCRYPTION_KEY, strRequestPayload);
+                strRequestPayload = Crypto.Decrypt(strRequestPayload);
 
                 var joDataJson = JObject.Parse(strRequestPayload ?? string.Empty);
 
@@ -43,9 +42,9 @@ namespace API.Controllers
                 var strLongTableName = joDataJson["long_table_name"]?.ToString();
                 var strShortTableName = joDataJson["short_table_name"]?.ToString();
 
-                strData = Crypto.decrypt(Tools.ENCRYPTION_KEY.Reverse().ToString(), strData);
-                strLongTableName = Crypto.decrypt(Tools.ENCRYPTION_KEY.Reverse().ToString(), strLongTableName);
-                strShortTableName = Crypto.decrypt(Tools.ENCRYPTION_KEY.Reverse().ToString(), strShortTableName);
+                strData = Crypto.Decrypt(strData);
+                strLongTableName = Crypto.Decrypt(strLongTableName);
+                strShortTableName = Crypto.Decrypt(strShortTableName);
 
                 var joData = JObject.Parse(strData ?? string.Empty);
                 

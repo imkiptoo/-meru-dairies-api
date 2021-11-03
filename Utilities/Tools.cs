@@ -8,11 +8,11 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using API.Controllers;
+using API.Helpers;
 using API.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using SkyCrypto;
 
 namespace API.Utilities
 {
@@ -23,7 +23,6 @@ namespace API.Utilities
         public static Service service = new Service();
         public static ILogger<SynchronizeController> _logger;
 
-        public static readonly string ENCRYPTION_KEY = "BfKzPbBC4Jg57ZqP55eUBL6An0i0PYo2UIEb0IVjPimMv63JIa3OGvr0wJBZtMtd";
         public JObject ErrorJObject()
         {
             return new JObject();
@@ -187,11 +186,11 @@ namespace API.Utilities
 
             if (strCoreDatabasePasswordType.Equals("ENCRYPTED"))
             {
-                strCoreDatabasePassword = Crypto.decrypt(Tools.ENCRYPTION_KEY, strCoreDatabasePassword);
+                strCoreDatabasePassword = Crypto.Decrypt(strCoreDatabasePassword);
             }
             else
             {
-                var strNewCoreDatabasePassword = Crypto.encrypt(Tools.ENCRYPTION_KEY, strCoreDatabasePassword);
+                var strNewCoreDatabasePassword = Crypto.Encrypt(strCoreDatabasePassword);
                 AddOrUpdateAppSetting("CoreDatabase:Password", strNewCoreDatabasePassword);
                 AddOrUpdateAppSetting("CoreDatabase:PasswordType", "ENCRYPTED");
 
@@ -200,11 +199,11 @@ namespace API.Utilities
             
             if (strSyncDatabasePasswordType.Equals("ENCRYPTED"))
             {
-                strSyncDatabasePassword = Crypto.decrypt(Tools.ENCRYPTION_KEY, strSyncDatabasePassword);
+                strSyncDatabasePassword = Crypto.Decrypt(strSyncDatabasePassword);
             }
             else
             {
-                var strNewSyncDatabasePassword = Crypto.encrypt(Tools.ENCRYPTION_KEY, strSyncDatabasePassword);
+                var strNewSyncDatabasePassword = Crypto.Encrypt(strSyncDatabasePassword);
                 AddOrUpdateAppSetting("SyncDatabase:Password", strNewSyncDatabasePassword);
                 AddOrUpdateAppSetting("SyncDatabase:PasswordType", "ENCRYPTED");
 

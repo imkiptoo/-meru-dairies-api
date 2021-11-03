@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using API.Entities;
 
 namespace API.Models
 {
@@ -6,7 +7,7 @@ namespace API.Models
     {
         public int Status { get; set; }
         public string Message { get; set; }
-        public string Id { get; set; }
+        public string Username { get; set; }
         public string Token { get; set; }
         public User User { get; set; }
         public List<string> Roles { get; set; }
@@ -15,7 +16,7 @@ namespace API.Models
         {
             Status = 200;
             Message = "Login Successful";
-            Id = user.Id;
+            Username = user.Username;
             User = user;
             Token = token;
         }

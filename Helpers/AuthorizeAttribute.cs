@@ -1,4 +1,5 @@
 using System;
+using API.Entities;
 using API.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
